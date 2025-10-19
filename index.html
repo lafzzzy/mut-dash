@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MUT Exchange - Live Snipe Dashboard V7</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #1a1a2e;
+            --panel-bg: rgba(26, 26, 46, 0.7);
+            --table-header-bg: #2a2a3e;
+            --text-color: #e0e0e0;
+            --border-color: #4a4a6a;
+            --accent-blue: #00aaff;
+            --accent-purple: #a761ff;
+            --profit-color: #2eff7b;
+            --loss-color: #ff4757;
+            --snipe-tier1-color: #ff4757; /* Red */
+            --snipe-tier2-color: #2eff7b; /* Green */
+            --snipe-tier3-color: #ffd700; /* Gold */
+        }
+        *, *::before, *::after { box-sizing: border-box; }
+        html, body { height: 100%; margin: 0; overflow: hidden; }
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--bg-color);
+            background-image: radial-gradient(circle at 10% 10%, var(--accent-blue, 0.1), transparent 30%),
+                              radial-gradient(circle at 90% 80%, var(--accent-purple, 0.1), transparent 30%);
+            color: var(--text-color);
+            padding: 2em;
+        }
+        .container { max-width: 1600px; margin: 0 auto; height: 100%; display: flex; flex-direction: column; }
+        h1 {
+            text-align: center; font-weight: 600; font-size: 2.5em; color: white;
+            text-shadow: 0 0 5px var(--accent-blue), 0 0 10px var(--accent-purple);
+            margin-top: 0; margin-bottom: 0.5em; flex-shrink: 0;
+        }
+        .config-panel {
+            background: var(--panel-bg); backdrop-filter: blur(10px); border: 1px solid var(--border-color);
+            border-radius: 12px; box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            display: flex; justify-content: center; align-items: center;
+            gap: 20px; padding: 20px; flex-wrap: wrap;
+            flex-shrink: 0; margin-bottom: 1.5em;
+        }
+        .config-item, .config-checkbox { display: flex; flex-direction: column; }
+        .config-item label { font-size: 0.9em; margin-bottom: 8px; color: #ccc; font-weight: 300; }
+        .config-item select, .config-item input {
+            background-color: #1a1a2e; color: var(--text-color); border: 1px solid var(--border-color);
+            border-radius: 6px; padding: 10px; font-size: 1em; font-family: 'Poppins', sans-serif;
+            transition: all 0.2s ease; width: 150px;
+        }
+        .config-item select:focus, .config-item input:focus {
+            outline: none; border-color: var(--accent-blue); box-shadow: 0 0 10px var(--accent-blue);
+        }
+        .config-checkbox { flex-direction: row; align-items: center; align-self: flex-end; gap: 10px; height: 42px; }
+        .main-content {
+            background: var(--panel-bg); backdrop-filter: blur(10px); border: 1px solid var(--border-color);
+            border-radius: 12px; box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            flex-grow: 1; display: flex; flex-direction: column;
+            overflow: hidden;
+        }
+        #status { text-align: center; padding: 15px; font-style: italic; border-bottom: 1px solid var(--border-color); flex-shrink: 0; }
+        
+        /* --- SCROLLING FIX --- */
+        .table-container {
+            overflow: auto; /* Changed to 'auto' to allow both vertical and horizontal scrolling */
+        }
+        table { width: 100%; border-collapse: collapse; font-size: 1em; }
+        th, td { padding: 15px 18px; text-align: left; border-bottom: 1px solid var(--border-color); white-space: nowrap; }
+        thead th { background-color: var(--table-header-bg); position: sticky; top: 0; z-index: 10; }
+        tr { transition: background-color 0.2s ease-in-out; }
+        tr:hover { background-color: rgba(167, 97, 255, 0.1); }
+        
+        td a { color: var(--text-color); text-decoration: none; font-weight: 600; }
+        td a:hover { color: var(--accent-blue); text-decoration: underline; }
+
+        .profit { font-weight: 600; color: var(--profit-color); }
+        .loss { color: var(--loss-color); }
+        .new-row { animation: fadeIn 0.5s ease-out forwards; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        
+        .snipe-tier1 { background: linear-gradient(90deg, rgba(255, 71, 87, 0.2) 0%, transparent 100%) !important; }
+        .snipe-tier2 { background: linear-gradient(90deg, rgba(46, 255, 123, 0.2) 0%, transparent 100%) !important; }
+        .snipe-tier3 {
+            background: linear-gradient(90deg, rgba(255, 215, 0, 0.25) 0%, transparent 100%) !important;
+            box-shadow: inset 0 0 15px rgba(255, 215, 0, 0.3); font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>MUT Live Snipe Dashboard</h1>
+        
+        <div class="config-panel">
+            <div class="config-item"><label for="strategy-select">Sniping Strategy</label><select id="strategy-select"><option value="q2" selected>Q2</option><option value="avg">Average</option><option value="q2_q3_avg">Q2/Q3 Average</option><option value="q3">Q3</option></select></div>
+            <div class="config-item"><label for="sales-count-select">Based on Last # Sales</label><select id="sales-count-select"><option value="3">3 Sales</option><option value="5">5 Sales</option><option value="10" selected>10 Sales</option><option value="15">15 Sales</option><option value="25">25 Sales</option></select></div>
+            <div class="config-item"><label for="min-profit-input">Min Profit</label><input type="number" id="min-profit-input" value="5000"></div>
+            <div class="config-item"><label for="min-profit-percent-input">Min Profit %</label><input type="number" id="min-profit-percent-input" value="3"></div>
+            <div class="config-item"><label for="min-ovr-input">Min OVR</label><input type="number" id="min-ovr-input" value="82"></div>
+            <div class="config-item"><label for="platform-select">Platform</label><select id="platform-select"><option value="both" selected>Both Platforms</option><option value="xbox.series">Xbox</option><option value="playstation.five">PlayStation</option></select></div>
+            <div class="config-checkbox"><input type="checkbox" id="snipes-only-checkbox" checked><label for="snipes-only-checkbox">Snipes Only</label></div>
+        </div>
+        <div class="main-content">
+            <div id="status">Connecting to WebSocket...</div>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr><th>Player</th><th>OVR</th><th>Program</th><th>Platform</th><th>Buy Now</th><th>Market Price</th><th>Profit</th><th>Time Left</th><th>Strategy</th></tr>
+                    </thead>
+                    <tbody id="auction-table-body"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const statusEl = document.getElementById('status');
+        const tableBody = document.getElementById('auction-table-body');
+        const strategySelect = document.getElementById('strategy-select');
+
+        const EA_TAX = 0.10;
+        const MAX_ROWS = 100;
+
+        function updateStatus(message, color = '#e0e0e0') { statusEl.textContent = message; statusEl.style.color = color; }
+        function formatNumber(num) { return num.toLocaleString(); }
+
+        setInterval(() => {
+            tableBody.querySelectorAll('tr .timer').forEach(timerCell => {
+                let seconds = parseInt(timerCell.dataset.seconds, 10);
+                if (seconds > 0) {
+                    seconds--;
+                    timerCell.dataset.seconds = seconds;
+                    const h = Math.floor(seconds / 3600).toString().padStart(2, '0');
+                    const m = Math.floor((seconds % 3600) / 60).toString().padStart(2, '0');
+                    const s = (seconds % 60).toString().padStart(2, '0');
+                    timerCell.textContent = `${h}:${m}:${s}`;
+                } else if (timerCell.textContent !== 'Expired') {
+                    timerCell.textContent = 'Expired';
+                    timerCell.parentElement.style.opacity = '0.5';
+                }
+            });
+        }, 1000);
+
+        function processAuction(auction) {
+            const strategyType = strategySelect.value;
+            const saleCount = document.getElementById('sales-count-select').value;
+            const minProfit = parseInt(document.getElementById('min-profit-input').value, 10);
+            const minProfitPercent = parseInt(document.getElementById('min-profit-percent-input').value, 10);
+            const minOvr = parseInt(document.getElementById('min-ovr-input').value, 10);
+            const platform = document.getElementById('platform-select').value;
+            const snipesOnly = document.getElementById('snipes-only-checkbox').checked;
+
+            if (auction.rating < minOvr) return;
+            if (platform !== 'both' && auction.platform !== platform) return;
+
+            let marketPrice = 0;
+            const buyNow = auction.buyoutPrice;
+
+            switch (strategyType) {
+                case 'q2': marketPrice = auction[`q2_rank_${saleCount}`]; break;
+                case 'q3': marketPrice = auction[`q3_rank_${saleCount}`]; break;
+                case 'avg': marketPrice = auction[`mean_rank_${saleCount}`]; break;
+                case 'q2_q3_avg':
+                    const q2 = auction[`q2_rank_${saleCount}`], q3 = auction[`q3_rank_${saleCount}`];
+                    if (q2 && q3) marketPrice = Math.round((q2 + q3) / 2);
+                    break;
+            }
+
+            if (!marketPrice || !buyNow || buyNow <= 0) return;
+
+            const profit = Math.floor((marketPrice * (1 - EA_TAX)) - buyNow);
+            const profitPercent = (profit / buyNow) * 100;
+
+            const isSnipe = profit >= minProfit && profitPercent >= minProfitPercent;
+            const strategyName = `${strategySelect.options[strategySelect.selectedIndex].text} (${saleCount})`;
+
+            if (isSnipe) {
+                let snipeClass = '';
+                if (profit >= 50000) snipeClass = 'snipe-tier3';
+                else if (profit >= 20000) snipeClass = 'snipe-tier2';
+                else if (profit >= 5000) snipeClass = 'snipe-tier1';
+                if (snipeClass) insertAuctionRow(auction, marketPrice, profit, snipeClass, strategyName);
+            } else if (!snipesOnly) {
+                insertAuctionRow(auction, marketPrice, profit, '', strategyName);
+            }
+        }
+
+        function insertAuctionRow(auction, marketPrice, profit, snipeClass, strategyName) {
+            const cardIdentifier = auction.cardId || auction.assetId || auction.definitionId || auction.itemId || auction.card_id || auction.id;
+            const playerName = `${auction.firstName} ${auction.secondName}`;
+            const mutGgUrl = cardIdentifier ? `https://www.mut.gg/players/player/26-${cardIdentifier}/` : `https://www.mut.gg/players/?name=${encodeURIComponent(playerName)}`;
+
+            const row = document.createElement('tr');
+            row.className = `new-row ${snipeClass}`;
+            row.innerHTML = `
+                <td><a href="${mutGgUrl}" target="_blank">${playerName}</a></td>
+                <td>${auction.rating}</td>
+                <td>${auction.programDescription}</td>
+                <td>${auction.platform.includes('xbox') ? 'Xbox' : 'PS5'}</td>
+                <td>${formatNumber(auction.buyoutPrice)}</td>
+                <td>${formatNumber(marketPrice)}</td>
+                <td class="${profit >= 0 ? 'profit' : 'loss'}">${formatNumber(profit)}</td>
+                <td class="timer" data-seconds="${auction.secondsRemaining}">Loading...</td>
+                <td>${strategyName}</td>
+            `;
+            tableBody.prepend(row);
+            if (tableBody.rows.length > MAX_ROWS) tableBody.deleteRow(-1);
+        }
+
+        function connectWebSocket() {
+            updateStatus("Connecting...", "orange");
+            const ws = new WebSocket('wss://ws.mut.exchange/app/bvc0muyixlx9yz9imw62?protocol=7&client=js&version=8.4.0-rc2&flash=false');
+            ws.onopen = () => {
+                updateStatus("Connected", "#2eff7b");
+                ws.send(JSON.stringify({ event: 'pusher:subscribe', data: { channel: 'auctions.all' } }));
+            };
+            ws.onmessage = event => {
+                const msg = JSON.parse(event.data);
+                if (msg.event === 'App\\Events\\AllAuction') processAuction(JSON.parse(msg.data));
+            };
+            ws.onclose = () => {
+                updateStatus("Disconnected. Reconnecting in 5s...", "#ff4757");
+                setTimeout(connectWebSocket, 5000);
+            };
+            ws.onerror = error => {
+                console.error('WebSocket Error:', error);
+                updateStatus("Error. Check console.", "#ff4757");
+                ws.close();
+            };
+        }
+        connectWebSocket();
+    </script>
+</body>
+</html>

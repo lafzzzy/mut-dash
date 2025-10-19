@@ -23,57 +23,70 @@
             --snipe-tier3-color: #ffd700; /* Gold */
         }
         *, *::before, *::after { box-sizing: border-box; }
-        html, body { height: 100%; margin: 0; overflow: hidden; }
+        html { height: 100%; }
         body {
             font-family: 'Poppins', sans-serif;
             background-color: var(--bg-color);
             background-image: radial-gradient(circle at 10% 10%, var(--accent-blue, 0.1), transparent 30%),
                               radial-gradient(circle at 90% 80%, var(--accent-purple, 0.1), transparent 30%);
             color: var(--text-color);
-            padding: 2em;
+            margin: 0;
+            padding: 1em;
+            height: 100%;
+            overflow: hidden;
         }
         .container { max-width: 1600px; margin: 0 auto; height: 100%; display: flex; flex-direction: column; }
         h1 {
-            text-align: center; font-weight: 600; font-size: 2.5em; color: white;
+            text-align: center; font-weight: 600; font-size: 2em; color: white;
             text-shadow: 0 0 5px var(--accent-blue), 0 0 10px var(--accent-purple);
             margin-top: 0; margin-bottom: 0.5em; flex-shrink: 0;
         }
         .config-panel {
             background: var(--panel-bg); backdrop-filter: blur(10px); border: 1px solid var(--border-color);
             border-radius: 12px; box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            flex-shrink: 0; margin-bottom: 1em; overflow: hidden;
+        }
+        .config-header {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 12px 15px; cursor: pointer; background-color: var(--table-header-bg);
+        }
+        .config-header h3 { margin: 0; font-size: 1em; color: var(--accent-purple); }
+        .config-header .toggle-icon::before { content: '[-]' }
+        .config-panel.minimized-mobile .config-header .toggle-icon::before { content: '[+]' }
+        .config-content {
             display: flex; justify-content: center; align-items: center;
-            gap: 20px; padding: 20px; flex-wrap: wrap;
-            flex-shrink: 0; margin-bottom: 1.5em;
+            gap: 20px; padding: 15px; flex-wrap: wrap;
+            transition: all 0.3s ease;
+        }
+        .config-panel.minimized-mobile .config-content {
+            display: none;
         }
         .config-item, .config-checkbox { display: flex; flex-direction: column; }
-        .config-item label { font-size: 0.9em; margin-bottom: 8px; color: #ccc; font-weight: 300; }
+        .config-item label { font-size: 0.8em; margin-bottom: 5px; color: #ccc; font-weight: 300; }
         .config-item select, .config-item input {
             background-color: #1a1a2e; color: var(--text-color); border: 1px solid var(--border-color);
-            border-radius: 6px; padding: 10px; font-size: 1em; font-family: 'Poppins', sans-serif;
-            transition: all 0.2s ease; width: 150px;
+            border-radius: 6px; padding: 8px; font-size: 0.9em; font-family: 'Poppins', sans-serif;
+            transition: all 0.2s ease; width: 130px;
         }
         .config-item select:focus, .config-item input:focus {
             outline: none; border-color: var(--accent-blue); box-shadow: 0 0 10px var(--accent-blue);
         }
-        .config-checkbox { flex-direction: row; align-items: center; align-self: flex-end; gap: 10px; height: 42px; }
+        .config-checkbox { flex-direction: row; align-items: center; align-self: center; gap: 10px; height: 42px; padding-top: 15px; }
         .main-content {
             background: var(--panel-bg); backdrop-filter: blur(10px); border: 1px solid var(--border-color);
             border-radius: 12px; box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
             flex-grow: 1; display: flex; flex-direction: column;
             overflow: hidden;
         }
-        #status { text-align: center; padding: 15px; font-style: italic; border-bottom: 1px solid var(--border-color); flex-shrink: 0; }
+        #status { text-align: center; padding: 12px; font-style: italic; border-bottom: 1px solid var(--border-color); flex-shrink: 0; }
         
-        .table-container { overflow: auto; }
-        table { width: 100%; border-collapse: collapse; font-size: 1em; }
-        th, td { padding: 15px 18px; text-align: left; border-bottom: 1px solid var(--border-color); white-space: nowrap; }
+        .table-container { overflow: auto; -webkit-overflow-scrolling: touch; }
+        table { width: 100%; border-collapse: collapse; font-size: 0.9em; }
+        th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid var(--border-color); white-space: nowrap; }
         thead th { background-color: var(--table-header-bg); position: sticky; top: 0; z-index: 10; }
-        tr { transition: background-color 0.2s ease-in-out; }
-        tr:hover { background-color: rgba(167, 97, 255, 0.1); }
         
         td a { color: var(--text-color); text-decoration: none; font-weight: 600; }
         td a:hover { color: var(--accent-blue); text-decoration: underline; }
-
         .profit { font-weight: 600; color: var(--profit-color); }
         .loss { color: var(--loss-color); }
         
@@ -86,9 +99,9 @@
 
         #tax-calculator {
             position: fixed;
-            bottom: 20px;
-            right: 20px;
-            width: 300px;
+            bottom: 10px;
+            right: 10px;
+            width: 280px;
             background: var(--panel-bg);
             backdrop-filter: blur(10px);
             border: 1px solid var(--border-color);
@@ -98,12 +111,8 @@
             overflow: hidden;
         }
         .calculator-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 12px 15px;
-            background-color: var(--table-header-bg);
-            cursor: pointer;
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 12px 15px; background-color: var(--table-header-bg); cursor: pointer;
         }
         .calculator-header h3 { margin: 0; font-size: 1em; color: var(--accent-purple); }
         .toggle-button { background: none; border: none; color: var(--text-color); font-size: 1.5em; cursor: pointer; line-height: 1; }
@@ -115,16 +124,19 @@
         #calc-break-even { color: var(--accent-blue); }
         #tax-calculator.minimized .calculator-content { display: none; }
 
-        /* Mobile Responsive Styles */
-        @media (max-width: 768px) {
-            body { padding: 10px; font-size: 14px; }
-            h1 { font-size: 1.5em; }
-            .config-panel { flex-direction: column; gap: 15px; padding: 15px; }
-            .config-item { width: 100%; }
-            .config-item select, .config-item input { width: 100%; padding: 12px; }
-            .config-checkbox { align-self: center; }
-            th, td { padding: 10px; }
-            #tax-calculator { width: 280px; bottom: 10px; right: 10px; }
+        @media (min-width: 769px) {
+            body { padding: 2em; }
+            h1 { font-size: 2.5em; }
+            .config-header { display: none; } /* Hide header on desktop */
+            .config-panel { margin-bottom: 1.5em; }
+            .config-panel.minimized-mobile .config-content { display: flex; } /* Ensure content is visible on desktop */
+            .config-content { flex-direction: row; gap: 20px; padding: 20px; }
+            .config-item { width: 150px; }
+            .config-item select, .config-item input { width: 150px; padding: 10px; }
+            .config-checkbox { align-self: flex-end; }
+            th, td { padding: 15px 18px; }
+            table { font-size: 1em; }
+            #tax-calculator { width: 300px; bottom: 20px; right: 20px; }
         }
     </style>
 </head>
@@ -132,18 +144,19 @@
     <div class="container">
         <h1>MUT Live Snipe Dashboard</h1>
         <div class="config-panel">
-            <div class="config-item"><label for="strategy-select">Sniping Strategy</label><select id="strategy-select">
-                <option value="q2" selected>Q2</option>
-                <option value="q2_q3_avg">Q2/Q3 Average</option>
-                <option value="q3">Q3</option>
-                <option value="avg">Average</option>
-            </select></div>
-            <div class="config-item"><label for="sales-count-select">Based on Last # Sales</label><select id="sales-count-select"><option value="3">3 Sales</option><option value="5">5 Sales</option><option value="10" selected>10 Sales</option><option value="15">15 Sales</option><option value="25">25 Sales</option></select></div>
-            <div class="config-item"><label for="min-profit-input">Min Profit</label><input type="number" id="min-profit-input" value="5000"></div>
-            <div class="config-item"><label for="min-profit-percent-input">Min Profit %</label><input type="number" id="min-profit-percent-input" value="3"></div>
-            <div class="config-item"><label for="min-ovr-input">Min OVR</label><input type="number" id="min-ovr-input" value="82"></div>
-            <div class="config-item"><label for="platform-select">Platform</label><select id="platform-select"><option value="both" selected>Both Platforms</option><option value="xbox.series">Xbox</option><option value="playstation.five">PlayStation</option></select></div>
-            <div class="config-checkbox"><input type="checkbox" id="snipes-only-checkbox" checked><label for="snipes-only-checkbox">Snipes Only</label></div>
+            <div class="config-header">
+                <h3>Filters</h3>
+                <span class="toggle-icon"></span>
+            </div>
+            <div class="config-content">
+                <div class="config-item"><label for="strategy-select">Sniping Strategy</label><select id="strategy-select"><option value="q2" selected>Q2</option><option value="q2_q3_avg">Q2/Q3 Average</option><option value="q3">Q3</option><option value="avg">Average</option></select></div>
+                <div class="config-item"><label for="sales-count-select">Based on Last # Sales</label><select id="sales-count-select"><option value="3">3 Sales</option><option value="5">5 Sales</option><option value="10" selected>10 Sales</option><option value="15">15 Sales</option><option value="25">25 Sales</option></select></div>
+                <div class="config-item"><label for="min-profit-input">Min Profit</label><input type="number" id="min-profit-input" value="5000"></div>
+                <div class="config-item"><label for="min-profit-percent-input">Min Profit %</label><input type="number" id="min-profit-percent-input" value="3"></div>
+                <div class="config-item"><label for="min-ovr-input">Min OVR</label><input type="number" id="min-ovr-input" value="82"></div>
+                <div class="config-item"><label for="platform-select">Platform</label><select id="platform-select"><option value="both" selected>Both Platforms</option><option value="xbox.series">Xbox</option><option value="playstation.five">PlayStation</option></select></div>
+                <div class="config-checkbox"><input type="checkbox" id="snipes-only-checkbox" checked><label for="snipes-only-checkbox">Snipes Only</label></div>
+            </div>
         </div>
         <div class="main-content">
             <div id="status">Connecting to WebSocket...</div>
@@ -164,22 +177,10 @@
             <button class="toggle-button">+</button>
         </div>
         <div class="calculator-content">
-            <div class="config-item">
-                <label for="calc-buy">Buy For</label>
-                <input type="text" id="calc-buy" placeholder="e.g. 50,000" inputmode="numeric">
-            </div>
-            <div class="config-item">
-                <label for="calc-sell">Sell For</label>
-                <input type="text" id="calc-sell" placeholder="e.g. 60,000" inputmode="numeric">
-            </div>
-            <div class="calculator-result">
-                <label id="calc-profit-label">Profit After Tax</label>
-                <div id="calc-profit">-</div>
-            </div>
-            <div class="calculator-result">
-                <label>Break-Even Sell Price</label>
-                <div id="calc-break-even">-</div>
-            </div>
+            <div class="config-item"><label for="calc-buy">Buy For</label><input type="text" id="calc-buy" placeholder="e.g. 50,000" inputmode="numeric"></div>
+            <div class="config-item"><label for="calc-sell">Sell For</label><input type="text" id="calc-sell" placeholder="e.g. 60,000" inputmode="numeric"></div>
+            <div class="calculator-result"><label id="calc-profit-label">Profit After Tax</label><div id="calc-profit">-</div></div>
+            <div class="calculator-result"><label>Break-Even Sell Price</label><div id="calc-break-even">-</div></div>
         </div>
     </div>
 
@@ -187,6 +188,7 @@
         const statusEl = document.getElementById('status');
         const tableBody = document.getElementById('auction-table-body');
         const configPanel = document.querySelector('.config-panel');
+        const configHeader = document.querySelector('.config-header');
 
         const EA_TAX = 0.10;
         const MAX_ROWS = 200;
@@ -210,6 +212,13 @@
         }
         
         configPanel.addEventListener('change', applyFilters);
+        if (configHeader) {
+            configHeader.addEventListener('click', () => configPanel.classList.toggle('minimized-mobile'));
+        }
+         // Minimize by default on mobile
+        if (window.innerWidth <= 768) {
+            configPanel.classList.add('minimized-mobile');
+        }
 
         function getSettings() {
              const strategySelect = document.getElementById('strategy-select');
@@ -248,7 +257,6 @@
             result.marketPrice = Math.round(rawMarketPrice || 0);
             if (!result.marketPrice || !buyNow || buyNow <= 0) return result;
 
-            // --- BUG FIX: Moved profit calculation before profitPercent calculation ---
             result.profit = Math.floor((result.marketPrice * (1 - EA_TAX)) - buyNow);
             const profitPercent = (result.profit / buyNow) * 100;
             result.isSnipe = result.profit >= settings.minProfit && profitPercent >= settings.minProfitPercent;

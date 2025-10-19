@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MUT Exchange - Live Snipe Dashboard V7</title>
+    <title>MUT Exchange - Live Snipe Dashboard</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
@@ -64,10 +64,7 @@
         }
         #status { text-align: center; padding: 15px; font-style: italic; border-bottom: 1px solid var(--border-color); flex-shrink: 0; }
         
-        /* --- SCROLLING FIX --- */
-        .table-container {
-            overflow: auto; /* Changed to 'auto' to allow both vertical and horizontal scrolling */
-        }
+        .table-container { overflow: auto; }
         table { width: 100%; border-collapse: collapse; font-size: 1em; }
         th, td { padding: 15px 18px; text-align: left; border-bottom: 1px solid var(--border-color); white-space: nowrap; }
         thead th { background-color: var(--table-header-bg); position: sticky; top: 0; z-index: 10; }
@@ -79,8 +76,6 @@
 
         .profit { font-weight: 600; color: var(--profit-color); }
         .loss { color: var(--loss-color); }
-        .new-row { animation: fadeIn 0.5s ease-out forwards; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         
         .snipe-tier1 { background: linear-gradient(90deg, rgba(255, 71, 87, 0.2) 0%, transparent 100%) !important; }
         .snipe-tier2 { background: linear-gradient(90deg, rgba(46, 255, 123, 0.2) 0%, transparent 100%) !important; }
@@ -88,14 +83,79 @@
             background: linear-gradient(90deg, rgba(255, 215, 0, 0.25) 0%, transparent 100%) !important;
             box-shadow: inset 0 0 15px rgba(255, 215, 0, 0.3); font-weight: 600;
         }
+
+        #tax-calculator {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 300px;
+            background: var(--panel-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            z-index: 1000;
+            overflow: hidden;
+        }
+        .calculator-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 15px;
+            background-color: var(--table-header-bg);
+            cursor: pointer;
+        }
+        .calculator-header h3 {
+            margin: 0;
+            font-size: 1em;
+            color: var(--accent-purple);
+        }
+        .toggle-button {
+            background: none;
+            border: none;
+            color: var(--text-color);
+            font-size: 1.5em;
+            cursor: pointer;
+            line-height: 1;
+        }
+        .calculator-content {
+            padding: 15px;
+            display: grid;
+            gap: 15px;
+        }
+        .calculator-content .config-item input[type="text"] {
+            width: 100%;
+        }
+        .calculator-result {
+            margin-top: 5px;
+        }
+        .calculator-result label {
+            font-size: 0.9em;
+            color: #ccc;
+        }
+        .calculator-result div {
+            font-size: 1.2em;
+            font-weight: 600;
+            color: var(--profit-color);
+        }
+        #calc-break-even {
+            color: var(--accent-blue);
+        }
+        #tax-calculator.minimized .calculator-content {
+            display: none;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>MUT Live Snipe Dashboard</h1>
-        
         <div class="config-panel">
-            <div class="config-item"><label for="strategy-select">Sniping Strategy</label><select id="strategy-select"><option value="q2" selected>Q2</option><option value="avg">Average</option><option value="q2_q3_avg">Q2/Q3 Average</option><option value="q3">Q3</option></select></div>
+            <div class="config-item"><label for="strategy-select">Sniping Strategy</label><select id="strategy-select">
+                <option value="q2" selected>Q2</option>
+                <option value="q2_q3_avg">Q2/Q3 Average</option>
+                <option value="q3">Q3</option>
+                <option value="avg">Average</option>
+            </select></div>
             <div class="config-item"><label for="sales-count-select">Based on Last # Sales</label><select id="sales-count-select"><option value="3">3 Sales</option><option value="5">5 Sales</option><option value="10" selected>10 Sales</option><option value="15">15 Sales</option><option value="25">25 Sales</option></select></div>
             <div class="config-item"><label for="min-profit-input">Min Profit</label><input type="number" id="min-profit-input" value="5000"></div>
             <div class="config-item"><label for="min-profit-percent-input">Min Profit %</label><input type="number" id="min-profit-percent-input" value="3"></div>
@@ -116,17 +176,143 @@
         </div>
     </div>
 
+    <div id="tax-calculator" class="minimized">
+        <div class="calculator-header">
+            <h3>EA Tax Calculator</h3>
+            <button class="toggle-button">+</button>
+        </div>
+        <div class="calculator-content">
+            <div class="config-item">
+                <label for="calc-buy">Buy For</label>
+                <input type="text" id="calc-buy" placeholder="e.g. 50,000" inputmode="numeric">
+            </div>
+            <div class="config-item">
+                <label for="calc-sell">Sell For</label>
+                <input type="text" id="calc-sell" placeholder="e.g. 60,000" inputmode="numeric">
+            </div>
+            <div class="calculator-result">
+                <label id="calc-profit-label">Profit After Tax</label>
+                <div id="calc-profit">-</div>
+            </div>
+            <div class="calculator-result">
+                <label>Break-Even Sell Price</label>
+                <div id="calc-break-even">-</div>
+            </div>
+        </div>
+    </div>
+
     <script>
         const statusEl = document.getElementById('status');
         const tableBody = document.getElementById('auction-table-body');
-        const strategySelect = document.getElementById('strategy-select');
+        const configPanel = document.querySelector('.config-panel');
 
         const EA_TAX = 0.10;
-        const MAX_ROWS = 100;
+        const MAX_ROWS = 200;
 
         function updateStatus(message, color = '#e0e0e0') { statusEl.textContent = message; statusEl.style.color = color; }
-        function formatNumber(num) { return num.toLocaleString(); }
+        function formatNumber(num) { return (num || 0).toLocaleString(undefined, { maximumFractionDigits: 0 }); }
 
+        function applyFilters() {
+            const settings = getSettings();
+            tableBody.querySelectorAll('tr').forEach(row => {
+                if (!row.auctionData) return;
+                const result = evaluateAuction(row.auctionData, settings);
+                row.style.display = result.shouldShow ? '' : 'none';
+                
+                row.className = `new-row ${result.snipeClass || ''}`;
+                row.cells[5].textContent = formatNumber(result.marketPrice);
+                row.cells[6].textContent = formatNumber(result.profit);
+                row.cells[6].className = result.profit >= 0 ? 'profit' : 'loss';
+                row.cells[8].textContent = result.strategyName;
+            });
+        }
+        
+        configPanel.addEventListener('change', applyFilters);
+
+        function getSettings() {
+             const strategySelect = document.getElementById('strategy-select');
+             return {
+                strategyType: strategySelect.value,
+                strategyLabel: strategySelect.options[strategySelect.selectedIndex].text,
+                saleCount: document.getElementById('sales-count-select').value,
+                minProfit: parseInt(document.getElementById('min-profit-input').value, 10),
+                minProfitPercent: parseInt(document.getElementById('min-profit-percent-input').value, 10),
+                minOvr: parseInt(document.getElementById('min-ovr-input').value, 10),
+                platform: document.getElementById('platform-select').value,
+                snipesOnly: document.getElementById('snipes-only-checkbox').checked
+            };
+        }
+
+        function evaluateAuction(auction, settings) {
+            const result = { shouldShow: false, isSnipe: false, marketPrice: 0, profit: 0, snipeClass: '', strategyName: '' };
+            
+            if (auction.rating < settings.minOvr) return result;
+            if (settings.platform !== 'both' && auction.platform !== settings.platform) return result;
+            
+            const buyNow = auction.buyoutPrice;
+            result.strategyName = `${settings.strategyLabel} (${settings.saleCount})`;
+            let rawMarketPrice = 0;
+
+            switch (settings.strategyType) {
+                case 'q2': rawMarketPrice = auction[`q2_rank_${settings.saleCount}`]; break;
+                case 'q3': rawMarketPrice = auction[`q3_rank_${settings.saleCount}`]; break;
+                case 'avg': rawMarketPrice = auction[`mean_rank_${settings.saleCount}`]; break;
+                case 'q2_q3_avg':
+                    const q2 = auction[`q2_rank_${settings.saleCount}`], q3 = auction[`q3_rank_${settings.saleCount}`];
+                    if (q2 && q3) rawMarketPrice = (q2 + q3) / 2;
+                    break;
+            }
+            
+            result.marketPrice = Math.round(rawMarketPrice || 0);
+            if (!result.marketPrice || !buyNow || buyNow <= 0) return result;
+
+            result.profit = Math.floor((result.marketPrice * (1 - EA_TAX)) - buyNow);
+            const profitPercent = (result.profit / buyNow) * 100;
+            result.isSnipe = result.profit >= settings.minProfit && profitPercent >= settings.minProfitPercent;
+            
+            if (result.isSnipe) {
+                if (result.profit >= 50000) result.snipeClass = 'snipe-tier3';
+                else if (result.profit >= 20000) result.snipeClass = 'snipe-tier2';
+                else if (result.profit >= 5000) result.snipeClass = 'snipe-tier1';
+            }
+            
+            result.shouldShow = (result.isSnipe && result.snipeClass) || !settings.snipesOnly;
+
+            return result;
+        }
+
+        function processNewAuction(auction) {
+            const settings = getSettings();
+            const result = evaluateAuction(auction, settings);
+            
+            if (result.shouldShow) {
+                insertAuctionRow(auction, result);
+            }
+        }
+        
+        function insertAuctionRow(auction, result) {
+            const cardIdentifier = auction.cardId || auction.assetId || auction.definitionId || auction.itemId || auction.card_id || auction.id;
+            const playerName = `${auction.firstName} ${auction.secondName}`;
+            const mutGgUrl = cardIdentifier ? `https://www.mut.gg/players/player/26-${cardIdentifier}/` : `https://www.mut.gg/players/?name=${encodeURIComponent(playerName)}`;
+
+            const row = document.createElement('tr');
+            row.className = `new-row ${result.snipeClass}`;
+            row.auctionData = auction;
+            row.innerHTML = `
+                <td><a href="${mutGgUrl}" target="_blank">${playerName}</a></td>
+                <td>${auction.rating}</td>
+                <td>${auction.programDescription}</td>
+                <td>${auction.platform.includes('xbox') ? 'Xbox' : 'PS5'}</td>
+                <td>${formatNumber(auction.buyoutPrice)}</td>
+                <td>${formatNumber(result.marketPrice)}</td>
+                <td class="${result.profit >= 0 ? 'profit' : 'loss'}">${formatNumber(result.profit)}</td>
+                <td class="timer" data-seconds="${auction.secondsRemaining}">Loading...</td>
+                <td>${result.strategyName}</td>
+            `;
+            tableBody.prepend(row);
+            if (tableBody.rows.length > MAX_ROWS) tableBody.deleteRow(-1);
+        }
+        
         setInterval(() => {
             tableBody.querySelectorAll('tr .timer').forEach(timerCell => {
                 let seconds = parseInt(timerCell.dataset.seconds, 10);
@@ -144,72 +330,6 @@
             });
         }, 1000);
 
-        function processAuction(auction) {
-            const strategyType = strategySelect.value;
-            const saleCount = document.getElementById('sales-count-select').value;
-            const minProfit = parseInt(document.getElementById('min-profit-input').value, 10);
-            const minProfitPercent = parseInt(document.getElementById('min-profit-percent-input').value, 10);
-            const minOvr = parseInt(document.getElementById('min-ovr-input').value, 10);
-            const platform = document.getElementById('platform-select').value;
-            const snipesOnly = document.getElementById('snipes-only-checkbox').checked;
-
-            if (auction.rating < minOvr) return;
-            if (platform !== 'both' && auction.platform !== platform) return;
-
-            let marketPrice = 0;
-            const buyNow = auction.buyoutPrice;
-
-            switch (strategyType) {
-                case 'q2': marketPrice = auction[`q2_rank_${saleCount}`]; break;
-                case 'q3': marketPrice = auction[`q3_rank_${saleCount}`]; break;
-                case 'avg': marketPrice = auction[`mean_rank_${saleCount}`]; break;
-                case 'q2_q3_avg':
-                    const q2 = auction[`q2_rank_${saleCount}`], q3 = auction[`q3_rank_${saleCount}`];
-                    if (q2 && q3) marketPrice = Math.round((q2 + q3) / 2);
-                    break;
-            }
-
-            if (!marketPrice || !buyNow || buyNow <= 0) return;
-
-            const profit = Math.floor((marketPrice * (1 - EA_TAX)) - buyNow);
-            const profitPercent = (profit / buyNow) * 100;
-
-            const isSnipe = profit >= minProfit && profitPercent >= minProfitPercent;
-            const strategyName = `${strategySelect.options[strategySelect.selectedIndex].text} (${saleCount})`;
-
-            if (isSnipe) {
-                let snipeClass = '';
-                if (profit >= 50000) snipeClass = 'snipe-tier3';
-                else if (profit >= 20000) snipeClass = 'snipe-tier2';
-                else if (profit >= 5000) snipeClass = 'snipe-tier1';
-                if (snipeClass) insertAuctionRow(auction, marketPrice, profit, snipeClass, strategyName);
-            } else if (!snipesOnly) {
-                insertAuctionRow(auction, marketPrice, profit, '', strategyName);
-            }
-        }
-
-        function insertAuctionRow(auction, marketPrice, profit, snipeClass, strategyName) {
-            const cardIdentifier = auction.cardId || auction.assetId || auction.definitionId || auction.itemId || auction.card_id || auction.id;
-            const playerName = `${auction.firstName} ${auction.secondName}`;
-            const mutGgUrl = cardIdentifier ? `https://www.mut.gg/players/player/26-${cardIdentifier}/` : `https://www.mut.gg/players/?name=${encodeURIComponent(playerName)}`;
-
-            const row = document.createElement('tr');
-            row.className = `new-row ${snipeClass}`;
-            row.innerHTML = `
-                <td><a href="${mutGgUrl}" target="_blank">${playerName}</a></td>
-                <td>${auction.rating}</td>
-                <td>${auction.programDescription}</td>
-                <td>${auction.platform.includes('xbox') ? 'Xbox' : 'PS5'}</td>
-                <td>${formatNumber(auction.buyoutPrice)}</td>
-                <td>${formatNumber(marketPrice)}</td>
-                <td class="${profit >= 0 ? 'profit' : 'loss'}">${formatNumber(profit)}</td>
-                <td class="timer" data-seconds="${auction.secondsRemaining}">Loading...</td>
-                <td>${strategyName}</td>
-            `;
-            tableBody.prepend(row);
-            if (tableBody.rows.length > MAX_ROWS) tableBody.deleteRow(-1);
-        }
-
         function connectWebSocket() {
             updateStatus("Connecting...", "orange");
             const ws = new WebSocket('wss://ws.mut.exchange/app/bvc0muyixlx9yz9imw62?protocol=7&client=js&version=8.4.0-rc2&flash=false');
@@ -219,7 +339,7 @@
             };
             ws.onmessage = event => {
                 const msg = JSON.parse(event.data);
-                if (msg.event === 'App\\Events\\AllAuction') processAuction(JSON.parse(msg.data));
+                if (msg.event === 'App\\Events\\AllAuction') processNewAuction(JSON.parse(msg.data));
             };
             ws.onclose = () => {
                 updateStatus("Disconnected. Reconnecting in 5s...", "#ff4757");
@@ -232,6 +352,64 @@
             };
         }
         connectWebSocket();
+
+        const calculator = document.getElementById('tax-calculator');
+        const toggleButton = calculator.querySelector('.toggle-button');
+        const calcBuyInput = document.getElementById('calc-buy');
+        const calcSellInput = document.getElementById('calc-sell');
+        const calcProfitLabel = document.getElementById('calc-profit-label');
+        const calcProfitEl = document.getElementById('calc-profit');
+        const calcBreakEvenEl = document.getElementById('calc-break-even');
+
+        function formatInput(input) {
+            let value = input.value.replace(/,/g, '');
+            if (value === '' || isNaN(value)) {
+                input.value = '';
+                return;
+            }
+            let numValue = parseInt(value, 10);
+            input.value = numValue.toLocaleString();
+        }
+
+        function runCalculator() {
+            const buyPrice = parseFloat(calcBuyInput.value.replace(/,/g, '')) || 0;
+            const sellPrice = parseFloat(calcSellInput.value.replace(/,/g, '')) || 0;
+
+            calcProfitEl.textContent = '-';
+            calcProfitEl.style.color = 'var(--profit-color)';
+            calcBreakEvenEl.textContent = '-';
+
+            if (buyPrice > 0 && sellPrice > 0) {
+                calcProfitLabel.textContent = 'Profit After Tax';
+                const netProfit = Math.floor((sellPrice * (1 - EA_TAX)) - buyPrice);
+                calcProfitEl.textContent = formatNumber(netProfit);
+                if (netProfit < 0) calcProfitEl.style.color = 'var(--loss-color)';
+            } else if (sellPrice > 0) {
+                calcProfitLabel.textContent = 'Coins After Tax';
+                const afterTax = Math.floor(sellPrice * (1 - EA_TAX));
+                calcProfitEl.textContent = formatNumber(afterTax);
+            } else if (buyPrice > 0) {
+                calcProfitLabel.textContent = 'Profit After Tax';
+                const breakEven = Math.ceil(buyPrice / (1 - EA_TAX));
+                calcBreakEvenEl.textContent = formatNumber(breakEven);
+            } else {
+                 calcProfitLabel.textContent = 'Profit After Tax';
+            }
+        }
+
+        toggleButton.addEventListener('click', () => {
+            calculator.classList.toggle('minimized');
+            toggleButton.textContent = calculator.classList.contains('minimized') ? '+' : '-';
+        });
+
+        calcBuyInput.addEventListener('input', (e) => {
+            formatInput(e.target);
+            runCalculator();
+        });
+        calcSellInput.addEventListener('input', (e) => {
+            formatInput(e.target);
+            runCalculator();
+        });
     </script>
 </body>
 </html>

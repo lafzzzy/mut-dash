@@ -18,9 +18,9 @@
             --accent-purple: #a761ff;
             --profit-color: #2eff7b;
             --loss-color: #ff4757;
-            --snipe-tier1-color: #ff4757; /* Red */
-            --snipe-tier2-color: #2eff7b; /* Green */
-            --snipe-tier3-color: #ffd700; /* Gold */
+            --snipe-tier1-color: #ff4757;
+            --snipe-tier2-color: #2eff7b;
+            --snipe-tier3-color: #ffd700;
         }
         *, *::before, *::after { box-sizing: border-box; }
         html { height: 100%; }
@@ -54,55 +54,69 @@
         }
 
         .config-panels-container {
-            display: flex;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
             gap: 1em;
             margin-bottom: 1em;
             flex-shrink: 0;
-            flex-wrap: wrap; 
+            align-items: start;
         }
         .config-panel {
             background: var(--panel-bg); backdrop-filter: blur(10px); border: 1px solid var(--border-color);
             border-radius: 12px; box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
             overflow: hidden;
-            flex: 1 1 400px; 
         }
         .config-header {
             display: flex; justify-content: space-between; align-items: center;
-            padding: 12px 15px; background-color: var(--card-bg);
+            padding: 12px 15px; 
+            background-image: linear-gradient(to right, var(--card-bg), #3a3a5e);
+            cursor: pointer;
+            user-select: none;
         }
-        .config-header h3 { margin: 0; font-size: 1em; color: var(--accent-purple); }
+        .config-header h3 { margin: 0; font-size: 1em; color: var(--accent-purple); font-weight: 600; }
+        .toggle-icon { transition: transform 0.3s ease; }
+        .config-panel.minimized .toggle-icon { transform: rotate(-90deg); }
         
         .config-content {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            align-items: flex-end;
+            display: grid;
             gap: 15px;
             padding: 15px;
-            max-height: 180px; 
-            overflow-y: auto;
-            -webkit-overflow-scrolling: touch;
+            overflow: hidden;
+            transition: max-height 0.4s ease-in-out, padding 0.4s ease-in-out, opacity 0.3s;
+            max-height: 500px;
+            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
         }
 
-        .config-content::-webkit-scrollbar { width: 8px; }
-        .config-content::-webkit-scrollbar-track { background: var(--bg-color); border-radius: 4px; }
-        .config-content::-webkit-scrollbar-thumb { background-color: var(--border-color); border-radius: 4px; }
-        .config-content::-webkit-scrollbar-thumb:hover { background-color: var(--accent-purple); }
+        .config-panel.minimized .config-content {
+            max-height: 0;
+            padding-top: 0;
+            padding-bottom: 0;
+            opacity: 0;
+        }
         
-        .config-item { display: flex; flex-direction: column; min-width: 130px; }
+        .config-item { display: flex; flex-direction: column; }
         .config-item label { font-size: 0.8em; margin-bottom: 5px; color: #ccc; font-weight: 300; }
         .config-item select, .config-item input {
             background-color: #1a1a2e; color: var(--text-color); border: 1px solid var(--border-color);
             border-radius: 6px; padding: 8px; font-size: 0.9em; font-family: 'Poppins', sans-serif;
             width: 100%;
+            box-shadow: inset 0 1px 4px rgba(0,0,0,0.3);
         }
         .config-item input[type="number"] { -moz-appearance: textfield; }
         .config-item input[type="number"]::-webkit-inner-spin-button, 
         .config-item input[type="number"]::-webkit-outer-spin-button { 
             -webkit-appearance: none; margin: 0; 
         }
-        .config-checkbox { justify-content: center; flex-direction: row; align-items: center; gap: 10px; padding-bottom: 8px; }
-        
+        .config-checkbox { 
+            grid-column: 1 / -1;
+            display: flex;
+            justify-content: center; 
+            flex-direction: row; 
+            align-items: center; 
+            gap: 10px; 
+            padding-bottom: 8px; 
+        }
+
         .main-content {
             background: var(--panel-bg); backdrop-filter: blur(10px); border: 1px solid var(--border-color);
             border-radius: 12px; box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
@@ -143,26 +157,16 @@
         .detail-item span, .price-item span { font-weight: 600; }
         .price-item .profit { color: var(--profit-color); font-size: 1.1em; }
         
-        .snipe-tier1 { border-left: 4px solid var(--snipe-tier1-color); background: radial-gradient(circle, rgba(255, 71, 87, 0.1) 0%, var(--card-bg) 70%); box-shadow: 0 0 10px rgba(255, 71, 87, 0.3); }
-        .snipe-tier2 { border-left: 4px solid var(--snipe-tier2-color); background: radial-gradient(circle, rgba(46, 255, 123, 0.1) 0%, var(--card-bg) 70%); box-shadow: 0 0 10px rgba(46, 255, 123, 0.3); }
-        .snipe-tier3 { border-left: 4px solid var(--snipe-tier3-color); background: radial-gradient(circle, rgba(255, 215, 0, 0.15) 0%, var(--card-bg) 70%); box-shadow: 0 0 15px rgba(255, 215, 0, 0.4); font-weight: 600; }
+        .snipe-tier1 { border-left: 4px solid var(--snipe-tier1-color); }
+        .snipe-tier2 { border-left: 4px solid var(--snipe-tier2-color); }
+        .snipe-tier3 { border-left: 4px solid var(--snipe-tier3-color); }
         
         @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
 
         @media (max-width: 900px) {
             body { padding: 10px; font-size: 14px; }
             h1 { font-size: 1.5em; }
-            .config-panels-container { flex-direction: column; }
-            .config-content { 
-                gap: 15px; 
-                align-items: stretch;
-                justify-content: space-around;
-                /* FINAL FIX: Use viewport height for responsive max-height */
-                max-height: 40vh;
-                overflow-y: auto;
-                -webkit-overflow-scrolling: touch;
-            }
-            .config-item { flex-grow: 1; min-width: 120px; }
+            .config-panels-container { grid-template-columns: 1fr; }
             #card-container { grid-template-columns: 1fr; }
         }
     </style>
@@ -177,17 +181,27 @@
 
         <div class="config-panels-container">
             <div class="config-panel" id="settings-panel">
-                <div class="config-header"><h3>Settings</h3></div>
+                <div class="config-header">
+                    <h3>Settings</h3>
+                    <div class="toggle-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                    </div>
+                </div>
                 <div class="config-content">
                     <div class="config-item"><label for="strategy-select">Sniping Strategy</label><select id="strategy-select"><option value="q2" selected>Q2</option><option value="q2_q3_avg">Q2/Q3 Average</option><option value="q3">Q3</option><option value="avg">Average</option></select></div>
-                    <div class="config-item"><label for="sales-count-select">Based on Last # Sales</label><select id="sales-count-select"><option value="3">3 Sales</option><option value="5">5 Sales</option><option value="10" selected>10 Sales</option><option value="15">15 Sales</option><option value="25">25 Sales</option></select></div>
+                    <div class="config-item"><label for="sales-count-select">Based on Last # Sales</label><select id="sales-count-select"><option value="3">3</option><option value="5">5</option><option value="10" selected>10</option><option value="15">15</option><option value="25">25</option></select></div>
                     <div class="config-item"><label for="min-profit-input">Min Profit</label><input type="text" id="min-profit-input" placeholder="e.g. 5,000" inputmode="numeric"></div>
                     <div class="config-item"><label for="min-profit-percent-input">Min Profit %</label><input type="number" id="min-profit-percent-input" placeholder="e.g. 5"></div>
                     <div class="config-checkbox"><input type="checkbox" id="snipes-only-checkbox" checked><label for="snipes-only-checkbox">Snipes Only</label></div>
                 </div>
             </div>
             <div class="config-panel" id="filtering-panel">
-                <div class="config-header"><h3>Filtering</h3></div>
+                <div class="config-header">
+                    <h3>Filtering</h3>
+                    <div class="toggle-icon">
+                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                    </div>
+                </div>
                 <div class="config-content">
                     <div class="config-item"><label for="min-ovr-input">Min OVR</label><input type="number" id="min-ovr-input" placeholder="e.g. 82"></div>
                     <div class="config-item"><label for="max-ovr-input">Max OVR</label><input type="number" id="max-ovr-input" placeholder="e.g. 99"></div>
@@ -208,13 +222,17 @@
         document.addEventListener('DOMContentLoaded', () => {
             const statusEl = document.getElementById('status');
             const cardContainer = document.getElementById('card-container');
-            const settingsPanel = document.getElementById('settings-panel');
-            const filteringPanel = document.getElementById('filtering-panel');
             const programSelect = document.getElementById('program-select');
             
             const EA_TAX = 0.10;
             const MAX_CARDS = 100;
             const discoveredPrograms = new Set();
+
+            document.querySelectorAll('.config-header').forEach(header => {
+                header.addEventListener('click', () => {
+                    header.parentElement.classList.toggle('minimized');
+                });
+            });
 
             function updateStatus(message, color = '#e0e0e0') { statusEl.textContent = message; statusEl.style.color = color; }
             function formatNumber(num) { return (num || 0).toLocaleString(undefined, { maximumFractionDigits: 0 }); }
@@ -222,18 +240,8 @@
             function formatInput(input) {
                 if (!input) return;
                 let value = input.value.replace(/,/g, '');
-                let cursorPos = input.selectionStart;
-                let originalLength = input.value.length;
-
                 if (value === '' || isNaN(value)) { input.value = ''; return; }
-                let numValue = parseInt(value, 10);
-                input.value = numValue.toLocaleString();
-                
-                let newLength = input.value.length;
-                let newCursorPos = cursorPos + (newLength - originalLength);
-                if (newCursorPos >= 0) {
-                    input.setSelectionRange(newCursorPos, newCursorPos);
-                }
+                input.value = parseInt(value, 10).toLocaleString();
             }
             ['min-profit-input', 'min-price-input', 'max-price-input'].forEach(id => {
                 const el = document.getElementById(id);
@@ -269,16 +277,17 @@
                             card.classList.add(result.snipeClass);
                         }
                     }
-
                     card.style.display = result.shouldShow ? 'flex' : 'none';
                 });
             }
             
-            document.querySelector('.top-controls').addEventListener('change', applyFilters);
-            settingsPanel.addEventListener('change', applyFilters);
-            filteringPanel.addEventListener('change', applyFilters);
-            settingsPanel.addEventListener('input', applyFilters);
-            filteringPanel.addEventListener('input', applyFilters);
+            ['#settings-panel', '#filtering-panel', '.top-controls'].forEach(selector => {
+                const element = document.querySelector(selector);
+                if(element) {
+                    element.addEventListener('change', applyFilters);
+                    element.addEventListener('input', applyFilters);
+                }
+            });
 
             function getSettings() {
                 const strategySelect = document.getElementById('strategy-select');

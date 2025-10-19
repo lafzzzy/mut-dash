@@ -105,44 +105,26 @@
             background-color: var(--table-header-bg);
             cursor: pointer;
         }
-        .calculator-header h3 {
-            margin: 0;
-            font-size: 1em;
-            color: var(--accent-purple);
-        }
-        .toggle-button {
-            background: none;
-            border: none;
-            color: var(--text-color);
-            font-size: 1.5em;
-            cursor: pointer;
-            line-height: 1;
-        }
-        .calculator-content {
-            padding: 15px;
-            display: grid;
-            gap: 15px;
-        }
-        .calculator-content .config-item input[type="text"] {
-            width: 100%;
-        }
-        .calculator-result {
-            margin-top: 5px;
-        }
-        .calculator-result label {
-            font-size: 0.9em;
-            color: #ccc;
-        }
-        .calculator-result div {
-            font-size: 1.2em;
-            font-weight: 600;
-            color: var(--profit-color);
-        }
-        #calc-break-even {
-            color: var(--accent-blue);
-        }
-        #tax-calculator.minimized .calculator-content {
-            display: none;
+        .calculator-header h3 { margin: 0; font-size: 1em; color: var(--accent-purple); }
+        .toggle-button { background: none; border: none; color: var(--text-color); font-size: 1.5em; cursor: pointer; line-height: 1; }
+        .calculator-content { padding: 15px; display: grid; gap: 15px; }
+        .calculator-content .config-item input[type="text"] { width: 100%; }
+        .calculator-result { margin-top: 5px; }
+        .calculator-result label { font-size: 0.9em; color: #ccc; }
+        .calculator-result div { font-size: 1.2em; font-weight: 600; color: var(--profit-color); }
+        #calc-break-even { color: var(--accent-blue); }
+        #tax-calculator.minimized .calculator-content { display: none; }
+
+        /* Mobile Responsive Styles */
+        @media (max-width: 768px) {
+            body { padding: 10px; font-size: 14px; }
+            h1 { font-size: 1.5em; }
+            .config-panel { flex-direction: column; gap: 15px; padding: 15px; }
+            .config-item { width: 100%; }
+            .config-item select, .config-item input { width: 100%; padding: 12px; }
+            .config-checkbox { align-self: center; }
+            th, td { padding: 10px; }
+            #tax-calculator { width: 280px; bottom: 10px; right: 10px; }
         }
     </style>
 </head>
@@ -266,6 +248,7 @@
             result.marketPrice = Math.round(rawMarketPrice || 0);
             if (!result.marketPrice || !buyNow || buyNow <= 0) return result;
 
+            // --- BUG FIX: Moved profit calculation before profitPercent calculation ---
             result.profit = Math.floor((result.marketPrice * (1 - EA_TAX)) - buyNow);
             const profitPercent = (result.profit / buyNow) * 100;
             result.isSnipe = result.profit >= settings.minProfit && profitPercent >= settings.minProfitPercent;

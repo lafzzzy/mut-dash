@@ -15,7 +15,7 @@
             --text-color: #e0e0e0;
             --border-color: #4a4a6a;
             --accent-blue: #00aaff;
-            --accent-purple: #a761ff;
+            --accent-purple: #a761ff; /* Changed for training text */
             --profit-color: #2eff7b;
             --loss-color: #ff4757;
             --snipe-tier1-color: #ff4757;
@@ -107,14 +107,12 @@
         .config-item input[type="number"]::-webkit-outer-spin-button { 
             -webkit-appearance: none; margin: 0; 
         }
-        .config-checkbox { 
+        
+        #coin-snipe-options, #training-snipe-options {
             grid-column: 1 / -1;
-            display: flex;
-            justify-content: center; 
-            flex-direction: row; 
-            align-items: center; 
-            gap: 10px; 
-            padding-bottom: 8px; 
+            display: grid;
+            gap: 15px;
+            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
         }
 
         .main-content {
@@ -142,10 +140,11 @@
             display: flex;
             flex-direction: column;
             gap: 12px;
-            transition: all 0.2s ease-in-out;
+            transition: all 0.2s ease-in-out, opacity 0.5s ease;
             animation: fadeIn 0.5s ease-out;
             cursor: pointer;
         }
+        .auction-card.fade-out { opacity: 0; }
         .auction-card:hover { transform: translateY(-5px); box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
         .card-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;}
         .card-header a { font-size: 1.2em; color: var(--text-color); font-weight: 600; text-decoration: none; }
@@ -156,10 +155,12 @@
         .detail-item label, .price-item label { font-size: 0.8em; color: #aaa; margin-bottom: 3px; }
         .detail-item span, .price-item span { font-weight: 600; }
         .price-item .profit { color: var(--profit-color); font-size: 1.1em; }
+        .price-item .cpt { color: var(--accent-purple); font-size: 1.1em; } /* Changed to accent-purple */
         
         .snipe-tier1 { border-left: 4px solid var(--snipe-tier1-color); }
         .snipe-tier2 { border-left: 4px solid var(--snipe-tier2-color); }
         .snipe-tier3 { border-left: 4px solid var(--snipe-tier3-color); }
+        .training-snipe { border-left: 4px solid var(--accent-purple); } /* Changed to accent-purple */
         
         @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
 
@@ -183,31 +184,34 @@
             <div class="config-panel" id="settings-panel">
                 <div class="config-header">
                     <h3>Settings</h3>
-                    <div class="toggle-icon">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
-                    </div>
+                    <div class="toggle-icon"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg></div>
                 </div>
                 <div class="config-content">
-                    <div class="config-item"><label for="strategy-select">Sniping Strategy</label><select id="strategy-select"><option value="q2" selected>Q2</option><option value="q2_q3_avg">Q2/Q3 Average</option><option value="q3">Q3</option><option value="avg">Average</option></select></div>
-                    <div class="config-item"><label for="sales-count-select">Based on Last # Sales</label><select id="sales-count-select"><option value="3">3</option><option value="5">5</option><option value="10" selected>10</option><option value="15">15</option><option value="25">25</option></select></div>
-                    <div class="config-item"><label for="min-profit-input">Min Profit</label><input type="text" id="min-profit-input" placeholder="e.g. 5,000" inputmode="numeric"></div>
-                    <div class="config-item"><label for="min-profit-percent-input">Min Profit %</label><input type="number" id="min-profit-percent-input" placeholder="e.g. 5"></div>
-                    <div class="config-checkbox"><input type="checkbox" id="snipes-only-checkbox" checked><label for="snipes-only-checkbox">Snipes Only</label></div>
+                    <div class="config-item" style="grid-column: 1 / -1;"><label for="sniper-mode-select">Sniper Mode</label><select id="sniper-mode-select"><option value="all">All Cards</option><option value="coin" selected>Coin Sniping</option><option value="training">Training Sniping</option></select></div>
+                    
+                    <div id="coin-snipe-options">
+                        <div class="config-item"><label for="strategy-select">Market Price Strategy</label><select id="strategy-select"><option value="q2" selected>Q2</option><option value="q2_q3_avg">Q2/Q3 Average</option><option value="q3">Q3</option><option value="avg">Average</option></select></div>
+                        <div class="config-item"><label for="sales-count-select">Based on Last # Sales</label><select id="sales-count-select"><option value="3">3</option><option value="5">5</option><option value="10" selected>10</option><option value="15">15</option><option value="25">25</option></select></div>
+                        <div class="config-item"><label for="min-profit-input">Min Profit</label><input type="text" id="min-profit-input" placeholder="e.g. 5,000" inputmode="numeric"></div>
+                        <div class="config-item"><label for="min-profit-percent-input">Min Profit %</label><input type="number" id="min-profit-percent-input" placeholder="e.g. 5"></div>
+                    </div>
+                    
+                    <div id="training-snipe-options" style="display: none;">
+                         <div class="config-item" style="grid-column: 1 / -1;"><label for="max-cpt-input">Max Coins/Training</label><input type="number" id="max-cpt-input" placeholder="e.g. 5.5" step="0.1"></div>
+                    </div>
                 </div>
             </div>
             <div class="config-panel" id="filtering-panel">
                 <div class="config-header">
                     <h3>Filtering</h3>
-                    <div class="toggle-icon">
-                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
-                    </div>
+                    <div class="toggle-icon"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg></div>
                 </div>
                 <div class="config-content">
                     <div class="config-item"><label for="min-ovr-input">Min OVR</label><input type="number" id="min-ovr-input" placeholder="e.g. 82"></div>
                     <div class="config-item"><label for="max-ovr-input">Max OVR</label><input type="number" id="max-ovr-input" placeholder="e.g. 99"></div>
                     <div class="config-item"><label for="min-price-input">Min Price</label><input type="text" id="min-price-input" placeholder="e.g. 1,000" inputmode="numeric"></div>
                     <div class="config-item"><label for="max-price-input">Max Price</label><input type="text" id="max-price-input" placeholder="e.g. 5,000,000" inputmode="numeric"></div>
-                    <div class="config-item"><label for="program-select">Program</label><select id="program-select"><option value="all">All Programs</option></select></div>
+                    <div class="config-item" style="grid-column: 1 / -1;"><label for="program-select">Program</label><select id="program-select"><option value="all">All Programs</option></select></div>
                 </div>
             </div>
         </div>
@@ -223,16 +227,33 @@
             const statusEl = document.getElementById('status');
             const cardContainer = document.getElementById('card-container');
             const programSelect = document.getElementById('program-select');
-            
+            const sniperModeSelect = document.getElementById('sniper-mode-select');
+            const coinSnipeOptions = document.getElementById('coin-snipe-options');
+            const trainingSnipeOptions = document.getElementById('training-snipe-options');
+
             const EA_TAX = 0.10;
-            const MAX_CARDS = 100;
+            const MAX_CARDS = 100; // Limit to 100 cards
             const discoveredPrograms = new Set();
+
+            const trainingValues = {
+                80: 110, 81: 170, 82: 270, 83: 430, 84: 680, 85: 1080, 
+                86: 1700, 87: 2700, 88: 4200, 89: 6700, 90: 10600, 91: 16700
+            };
 
             document.querySelectorAll('.config-header').forEach(header => {
                 header.addEventListener('click', () => {
                     header.parentElement.classList.toggle('minimized');
                 });
             });
+            
+            function updateVisibleSettings() {
+                const selectedMode = sniperModeSelect.value;
+                coinSnipeOptions.style.display = selectedMode === 'coin' ? 'grid' : 'none';
+                trainingSnipeOptions.style.display = selectedMode === 'training' ? 'grid' : 'none';
+                applyFilters();
+            }
+            sniperModeSelect.addEventListener('change', updateVisibleSettings);
+            updateVisibleSettings(); // Initial call
 
             function updateStatus(message, color = '#e0e0e0') { statusEl.textContent = message; statusEl.style.color = color; }
             function formatNumber(num) { return (num || 0).toLocaleString(undefined, { maximumFractionDigits: 0 }); }
@@ -247,108 +268,33 @@
                 const el = document.getElementById(id);
                 if(el) el.addEventListener('input', e => formatInput(e.target));
             });
-
+            
             function applyFilters() {
-                const settings = getSettings();
-                const strategyName = `${settings.strategyLabel} (${settings.saleCount})`;
-                const marketPriceLabelText = `${settings.strategyLabel} Price (${settings.saleCount})`;
-
-                cardContainer.querySelectorAll('.auction-card').forEach(card => {
-                    if (!card.auctionData) return;
-                    
-                    const result = evaluateAuction(card.auctionData, settings);
-
-                    if (result.shouldShow) {
-                        const marketPriceLabelEl = card.querySelector('label[data-type="market-price-label"]');
-                        const marketPriceEl = card.querySelector('.price-item span[data-type="market-price"]');
-                        const profitEl = card.querySelector('.price-item span[data-type="profit"]');
-                        const strategyEl = card.querySelector('.detail-item span[data-type="strategy"]');
-                        
-                        if(marketPriceLabelEl) marketPriceLabelEl.textContent = marketPriceLabelText;
-                        if(marketPriceEl) marketPriceEl.textContent = formatNumber(result.marketPrice);
-                        if(strategyEl) strategyEl.textContent = strategyName;
-                        if(profitEl) {
-                           profitEl.textContent = formatNumber(result.profit);
-                           profitEl.className = result.profit >= 0 ? 'profit' : 'loss';
-                        }
-                        
-                        card.className = 'auction-card';
-                        if (result.snipeClass) {
-                            card.classList.add(result.snipeClass);
-                        }
-                    }
-                    card.style.display = result.shouldShow ? 'flex' : 'none';
-                });
+                cardContainer.innerHTML = ''; 
             }
             
-            ['#settings-panel', '#filtering-panel', '.top-controls'].forEach(selector => {
-                const element = document.querySelector(selector);
-                if(element) {
-                    element.addEventListener('change', applyFilters);
-                    element.addEventListener('input', applyFilters);
-                }
+            document.querySelectorAll('.config-panel, .top-controls').forEach(panel => {
+                panel.addEventListener('change', applyFilters);
+                panel.addEventListener('input', applyFilters);
             });
 
             function getSettings() {
                 const strategySelect = document.getElementById('strategy-select');
                 return {
+                    sniperMode: document.getElementById('sniper-mode-select').value,
                     strategyType: strategySelect.value,
                     strategyLabel: strategySelect.options[strategySelect.selectedIndex].text,
                     saleCount: document.getElementById('sales-count-select').value,
                     minProfit: parseInt(document.getElementById('min-profit-input').value.replace(/,/g, ''), 10) || 0,
                     minProfitPercent: parseInt(document.getElementById('min-profit-percent-input').value, 10) || 0,
+                    maxCpt: parseFloat(document.getElementById('max-cpt-input').value) || 0,
                     minOvr: parseInt(document.getElementById('min-ovr-input').value, 10) || 0,
                     maxOvr: parseInt(document.getElementById('max-ovr-input').value, 10) || 999,
                     minPrice: parseInt(document.getElementById('min-price-input').value.replace(/,/g, ''), 10) || 0,
                     maxPrice: parseInt(document.getElementById('max-price-input').value.replace(/,/g, ''), 10) || 99999999,
                     program: document.getElementById('program-select').value,
                     platform: document.getElementById('platform-select').value,
-                    snipesOnly: document.getElementById('snipes-only-checkbox').checked
                 };
-            }
-
-            function evaluateAuction(auction, settings) {
-                const result = { shouldShow: false, isSnipe: false, marketPrice: 0, profit: 0, snipeClass: '' };
-                const buyNow = auction.buyoutPrice;
-                
-                if ((settings.minOvr > 0 && auction.rating < settings.minOvr) ||
-                    (settings.maxOvr < 999 && auction.rating > settings.maxOvr) ||
-                    (buyNow < settings.minPrice || buyNow > settings.maxPrice) ||
-                    (settings.platform !== 'both' && auction.platform !== settings.platform) ||
-                    (settings.program !== 'all' && auction.programDescription !== settings.program)) {
-                    return result;
-                }
-
-                let rawMarketPrice = 0;
-                switch (settings.strategyType) {
-                    case 'q2': rawMarketPrice = auction[`q2_rank_${settings.saleCount}`]; break;
-                    case 'q3': rawMarketPrice = auction[`q3_rank_${settings.saleCount}`]; break;
-                    case 'avg': rawMarketPrice = auction[`mean_rank_${settings.saleCount}`]; break;
-                    case 'q2_q3_avg':
-                        const q2 = auction[`q2_rank_${settings.saleCount}`], q3 = auction[`q3_rank_${settings.saleCount}`];
-                        if (q2 && q3) rawMarketPrice = (q2 + q3) / 2;
-                        break;
-                }
-                
-                result.marketPrice = Math.round(rawMarketPrice || 0);
-                if (!result.marketPrice || !buyNow || buyNow <= 0) {
-                    result.shouldShow = !settings.snipesOnly;
-                    return result;
-                }
-
-                result.profit = Math.floor((result.marketPrice * (1 - EA_TAX)) - buyNow);
-                const profitPercent = buyNow > 0 ? (result.profit / buyNow) * 100 : 0;
-                result.isSnipe = result.profit >= settings.minProfit && profitPercent >= settings.minProfitPercent;
-                
-                result.shouldShow = settings.snipesOnly ? result.isSnipe : true;
-
-                if (result.isSnipe) {
-                    if (result.profit >= 50000) result.snipeClass = 'snipe-tier3';
-                    else if (result.profit >= 20000) result.snipeClass = 'snipe-tier2';
-                    else if (result.profit >= 5000) result.snipeClass = 'snipe-tier1';
-                }
-                
-                return result;
             }
 
             function processNewAuction(auction) {
@@ -359,12 +305,74 @@
                     option.textContent = auction.programDescription;
                     programSelect.appendChild(option);
                 }
-                
+
                 const settings = getSettings();
-                const result = evaluateAuction(auction, settings);
-                if (result.shouldShow) {
-                    createAuctionCard(auction, result);
+                
+                const buyNow = auction.buyoutPrice;
+                if ((settings.minOvr > 0 && auction.rating < settings.minOvr) ||
+                    (settings.maxOvr < 999 && auction.rating > settings.maxOvr) ||
+                    (buyNow < settings.minPrice || buyNow > settings.maxPrice) ||
+                    (settings.platform !== 'both' && auction.platform !== settings.platform) ||
+                    (settings.program !== 'all' && auction.programDescription !== settings.program)) {
+                    return;
                 }
+
+                switch (settings.sniperMode) {
+                    case 'coin':
+                        const coinResult = evaluateCoinSnipe(auction, settings);
+                        if (coinResult.isSnipe) createAuctionCard(auction, coinResult);
+                        break;
+                    case 'training':
+                        const trainingResult = evaluateTrainingSnipe(auction, settings);
+                        if (trainingResult.isSnipe) createAuctionCard(auction, trainingResult);
+                        break;
+                    case 'all':
+                        createAuctionCard(auction, {});
+                        break;
+                }
+            }
+
+            function evaluateCoinSnipe(auction, settings) {
+                const result = { isSnipe: false, marketPrice: 0, profit: 0, snipeClass: '', type: 'coin' };
+                let rawMarketPrice = 0;
+                switch (settings.strategyType) {
+                    case 'q2': rawMarketPrice = auction[`q2_rank_${settings.saleCount}`]; break;
+                    case 'q3': rawMarketPrice = auction[`q3_rank_${settings.saleCount}`]; break;
+                    case 'avg': rawMarketPrice = auction[`mean_rank_${settings.saleCount}`]; break;
+                    case 'q2_q3_avg':
+                        const q2 = auction[`q2_rank_${settings.saleCount}`], q3 = auction[`q3_rank_${settings.saleCount}`];
+                        if (q2 && q3) rawMarketPrice = (q2 + q3) / 2;
+                        break;
+                }
+                result.marketPrice = Math.round(rawMarketPrice || 0);
+
+                if (!result.marketPrice || !auction.buyoutPrice || auction.buyoutPrice <= 0) return result;
+
+                result.profit = Math.floor((result.marketPrice * (1 - EA_TAX)) - auction.buyoutPrice);
+                const profitPercent = (result.profit / auction.buyoutPrice) * 100;
+                result.isSnipe = result.profit >= settings.minProfit && profitPercent >= settings.minProfitPercent;
+                
+                if (result.isSnipe) {
+                    if (result.profit >= 50000) result.snipeClass = 'snipe-tier3';
+                    else if (result.profit >= 20000) result.snipeClass = 'snipe-tier2';
+                    else if (result.profit >= 5000) result.snipeClass = 'snipe-tier1';
+                }
+                return result;
+            }
+
+            function evaluateTrainingSnipe(auction, settings) {
+                const result = { isSnipe: false, trainingValue: 0, cpt: 0, snipeClass: 'training-snipe', type: 'training' };
+                const trainingValue = trainingValues[auction.rating];
+
+                if (!trainingValue || !settings.maxCpt || settings.maxCpt <= 0) return result;
+
+                const cpt = auction.buyoutPrice / trainingValue;
+                if (cpt <= settings.maxCpt) {
+                    result.isSnipe = true;
+                    result.trainingValue = trainingValue;
+                    result.cpt = cpt;
+                }
+                return result;
             }
             
             function createAuctionCard(auction, result) {
@@ -374,47 +382,35 @@
                 
                 const card = document.createElement('div');
                 card.className = 'auction-card';
-                if (result.snipeClass) {
-                    card.classList.add(result.snipeClass);
-                }
-                card.auctionData = auction;
+                if (result.snipeClass) card.classList.add(result.snipeClass);
 
                 card.addEventListener('click', (e) => {
-                    if (e.target.tagName !== 'A') {
-                        window.open(mutGgUrl, '_blank');
-                    }
+                    if (e.target.tagName !== 'A') window.open(mutGgUrl, '_blank');
                 });
                 
                 const settings = getSettings();
-                const strategyName = `${settings.strategyLabel} (${settings.saleCount})`;
                 const marketPriceLabelText = `${settings.strategyLabel} Price (${settings.saleCount})`;
 
-                card.innerHTML = `
-                    <div class="card-header">
-                        <a href="${mutGgUrl}" target="_blank">${playerName}</a>
-                        <span class="ovr">${auction.rating} OVR</span>
-                    </div>
-                    <div class="card-details">
-                        <div class="detail-item"><label>Program</label><span>${auction.programDescription || 'N/A'}</span></div>
-                        <div class="detail-item"><label>Platform</label><span>${auction.platform.includes('xbox') ? 'Xbox' : 'PS5'}</span></div>
-                    </div>
-                    <div class="card-pricing">
-                        <div class="price-item"><label>Buy Now</label><span>${formatNumber(auction.buyoutPrice)}</span></div>
-                        <div class="price-item"><label data-type="market-price-label">${marketPriceLabelText}</label><span data-type="market-price">${formatNumber(result.marketPrice)}</span></div>
-                        <div class="price-item"><label>Profit</label><span data-type="profit" class="${result.profit >= 0 ? 'profit' : 'loss'}">${formatNumber(result.profit)}</span></div>
-                        <div class="price-item"><label>Time Left</label><span class="timer" data-seconds="${auction.secondsRemaining}">Loading...</span></div>
-                    </div>
-                    <div class="card-details">
-                        <div class="detail-item"><label>Strategy</label><span data-type="strategy">${strategyName}</span></div>
-                    </div>
-                `;
+                let pricingHTML = '';
+                if (result.type === 'coin') {
+                    pricingHTML = `<div class="price-item"><label>Buy Now</label><span>${formatNumber(auction.buyoutPrice)}</span></div><div class="price-item"><label data-type="market-price-label">${marketPriceLabelText}</label><span data-type="market-price">${formatNumber(result.marketPrice)}</span></div><div class="price-item"><label>Profit</label><span data-type="profit" class="${result.profit >= 0 ? 'profit' : 'loss'}">${formatNumber(result.profit)}</span></div><div class="price-item"><label>Time Left</label><span class="timer" data-seconds="${auction.secondsRemaining}">Loading...</span></div>`;
+                } else if (result.type === 'training') {
+                    pricingHTML = `<div class="price-item"><label>Buy Now</label><span>${formatNumber(auction.buyoutPrice)}</span></div><div class="price-item"><label>Training Value</label><span>${formatNumber(result.trainingValue)}</span></div><div class="price-item"><label>Coins/Training</label><span class="cpt">${result.cpt.toFixed(2)}</span></div><div class="price-item"><label>Time Left</label><span class="timer" data-seconds="${auction.secondsRemaining}">Loading...</span></div>`;
+                } else {
+                     pricingHTML = `<div class="price-item"><label>Buy Now</label><span>${formatNumber(auction.buyoutPrice)}</span></div><div class="price-item"><label>Time Left</label><span class="timer" data-seconds="${auction.secondsRemaining}">Loading...</span></div>`;
+                }
+
+                card.innerHTML = `<div class="card-header"><a href="${mutGgUrl}" target="_blank">${playerName}</a><span class="ovr">${auction.rating} OVR</span></div><div class="card-details"><div class="detail-item"><label>Program</label><span>${auction.programDescription || 'N/A'}</span></div><div class="detail-item"><label>Platform</label><span>${auction.platform.includes('xbox') ? 'Xbox' : 'PS5'}</span></div></div><div class="card-pricing">${pricingHTML}</div>`;
 
                 cardContainer.prepend(card);
+                // Enforce MAX_CARDS limit
                 if (cardContainer.children.length > MAX_CARDS) {
                     cardContainer.lastElementChild.remove();
                 }
             }
             
+            // No need for CARD_LIFESPAN interval as MAX_CARDS handles removal
+
             setInterval(() => {
                 document.querySelectorAll('.timer').forEach(timerCell => {
                     if (!timerCell) return;

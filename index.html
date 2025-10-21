@@ -43,15 +43,6 @@
             margin-top: 0; margin-bottom: 0.5em; flex-shrink: 0;
         }
         
-        .main-nav { display: flex; justify-content: center; gap: 10px; margin-bottom: 1em; }
-        .nav-button {
-            background: var(--panel-bg); border: 1px solid var(--border-color); border-radius: 8px;
-            padding: 10px 20px; color: var(--text-color); cursor: pointer; transition: background-color 0.2s, color 0.2s;
-            font-family: 'Bebas Neue', cursive; font-size: 1.2em; letter-spacing: 1px;
-        }
-        .nav-button.active { background-color: var(--accent-purple); color: white; border-color: var(--accent-purple); }
-        .nav-button:not(.active):hover { background-color: var(--card-bg); }
-
         .market-ticker {
             background: var(--panel-bg); backdrop-filter: blur(10px); border: 1px solid var(--border-color);
             border-radius: 12px; padding: 10px 15px; margin-bottom: 1em; overflow: hidden; white-space: nowrap;
@@ -99,17 +90,6 @@
         .price-item .profit { color: var(--profit-color); }
         .price-item .cpt { color: var(--accent-purple); }
         
-        .summary-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1em; margin-bottom: 1em; }
-        .stat-card { background: var(--card-bg); padding: 15px; border-radius: 8px; border-left: 4px solid var(--accent-purple); }
-        .stat-card label { font-size: 1.1em; color: #aaa; }
-        .stat-card div { font-size: 1.8em; color: var(--profit-color); }
-        #tracked-snipes-container { display: flex; flex-direction: column; gap: 1em; }
-        .tracked-snipe-card { background-color: var(--card-bg); border-radius: 8px; padding: 15px; display: grid; gap: 15px; grid-template-columns: 1fr; }
-        .tracked-details { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 15px; align-items: flex-end; }
-        .tracked-actions { display: flex; gap: 10px; justify-content: flex-end; }
-        #manual-add-btn, .tracked-actions button { background-color: var(--accent-purple); border: none; color: white; border-radius: 6px; padding: 8px 12px; cursor: pointer; font-family: 'Bebas Neue', cursive; font-size: 1.1em; letter-spacing: 1px; }
-        .tracked-actions button.delete { background-color: var(--loss-color); }
-
         .snipe-tier1 { border-left: 4px solid var(--snipe-tier1-color); }
         .snipe-tier2 { border-left: 4px solid var(--snipe-tier2-color); }
         .snipe-tier3 { border-left: 4px solid var(--snipe-tier3-color); animation: gold-pulse 2s infinite; }
@@ -189,6 +169,7 @@
             const EA_TAX = 0.10, MAX_CARDS = 100, CARD_LIFESPAN = 300000;
             const discoveredPrograms = new Set();
             let hourlySnipes = [];
+            let sessionHourStartTime = Date.now();
 
             const trainingValues = { 80: 110, 81: 170, 82: 270, 83: 430, 84: 680, 85: 1080, 86: 1700, 87: 2700, 88: 4200, 89: 6700, 90: 10600, 91: 16700 };
 
@@ -216,7 +197,46 @@
                 if(el) el.addEventListener('input', e => formatInput(e.target));
             });
             
-            function applyFilters() { cardContainer.innerHTML = ''; }
+            function applyFilters() {
+                const settings = getSettings();
+                cardContainer.querySelectorAll('.auction-card').forEach(card => {
+                    if (!card.auctionData) { card.style.display = 'none'; return; }
+                    
+                    const auction = card.auctionData;
+                    const buyNow = auction.buyoutPrice;
+
+                    const passesGeneral = !((settings.minOvr > 0 && auction.rating < settings.minOvr) || (settings.maxOvr < 999 && auction.rating > settings.maxOvr) || (buyNow < settings.minPrice || buyNow > settings.maxPrice) || (settings.platform !== 'both' && auction.platform !== settings.platform) || (settings.program !== 'all' && auction.programDescription !== settings.program));
+                    
+                    if (!passesGeneral) {
+                        card.style.display = 'none';
+                        return;
+                    }
+
+                    let result;
+                    switch (settings.sniperMode) {
+                        case 'coin':
+                            result = evaluateCoinSnipe(auction, settings);
+                            if (result.isSnipe) {
+                                card.querySelector('label[data-type="market-price-label"]').textContent = `${settings.strategyLabel} Price (${settings.saleCount})`;
+                                card.querySelector('span[data-type="market-price"]').textContent = formatNumber(result.marketPrice);
+                                const profitEl = card.querySelector('span[data-type="profit"]');
+                                profitEl.textContent = formatNumber(result.profit);
+                                profitEl.className = result.profit >= 0 ? 'profit' : 'loss';
+                                card.style.display = 'flex';
+                            } else {
+                                card.style.display = 'none';
+                            }
+                            break;
+                        case 'training':
+                            result = evaluateTrainingSnipe(auction, settings);
+                            card.style.display = result.isSnipe ? 'flex' : 'none';
+                            break;
+                        case 'all':
+                            card.style.display = 'flex';
+                            break;
+                    }
+                });
+            }
             document.querySelectorAll('.config-panel, .top-controls').forEach(panel => {
                 panel.addEventListener('change', applyFilters);
                 panel.addEventListener('input', applyFilters);
@@ -252,6 +272,10 @@
                 const coinResultForTicker = evaluateCoinSnipe(auction, tickerSettings);
                 if (coinResultForTicker.isSnipe) hourlySnipes.push({ ...coinResultForTicker, name: `${auction.firstName} ${auction.secondName}`, platform: auction.platform, buyPrice: auction.buyoutPrice, timestamp: Date.now() });
 
+                applyFiltersToNewCard(auction);
+            }
+            
+            function applyFiltersToNewCard(auction) {
                 const settings = getSettings();
                 const buyNow = auction.buyoutPrice;
                 if ((settings.minOvr > 0 && auction.rating < settings.minOvr) || (settings.maxOvr < 999 && auction.rating > settings.maxOvr) || (buyNow < settings.minPrice || buyNow > settings.maxPrice) || (settings.platform !== 'both' && auction.platform !== settings.platform) || (settings.program !== 'all' && auction.programDescription !== settings.program)) return;
@@ -311,6 +335,7 @@
                 card.className = 'auction-card';
                 if (result.snipeClass) card.classList.add(result.snipeClass);
                 card.dataset.timestamp = Date.now();
+                card.auctionData = auction;
                 card.addEventListener('click', e => { if (e.target.tagName !== 'A' && !e.target.closest('button')) window.open(mutGgUrl, '_blank'); });
                 
                 const marketPriceLabelText = `${getSettings().strategyLabel} Price (${getSettings().saleCount})`;
@@ -330,8 +355,10 @@
 
             function updateTicker() {
                 const now = Date.now();
-                const oneHourAgo = now - 3600000;
-                hourlySnipes = hourlySnipes.filter(s => s.timestamp > oneHourAgo);
+                if (now - sessionHourStartTime > 3600000) {
+                    hourlySnipes = [];
+                    sessionHourStartTime = now;
+                }
                 
                 const totalProfitXbox = hourlySnipes.filter(s => s.platform === 'xbox.series').reduce((sum, s) => sum + s.profit, 0);
                 const totalProfitPs5 = hourlySnipes.filter(s => s.platform === 'playstation.five').reduce((sum, s) => sum + s.profit, 0);
@@ -357,7 +384,7 @@
                 let text = '<strong>Snipe of the Hour:</strong> Awaiting data...';
                 if (bestOverallSnipe) text = `<strong>Snipe of the Hour:</strong> ${bestOverallSnipe.name} for ${formatNumber(bestOverallSnipe.buyPrice)} (${formatNumber(bestOverallSnipe.profit)} profit) (${bestOverallSnipe.platform.includes('xbox') ? 'Xbox' : 'PS5'})`;
                 snipeEl.innerHTML = text; snipeEl2.innerHTML = text;
-                const profitText = `<strong>Potential Profit (1H - ${platformLabel}):</strong> ${formatNumber(totalProfit)}`;
+                const profitText = `<strong>Potential Profit (This Hour - ${platformLabel}):</strong> ${formatNumber(totalProfit)}`;
                 profitEl.innerHTML = profitText; profitEl2.innerHTML = profitText;
             }
             setInterval(updateTicker, 30000);

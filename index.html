@@ -179,7 +179,7 @@
                 const selectedMode = sniperModeSelect.value;
                 coinSnipeOptions.style.display = selectedMode === 'coin' ? 'grid' : 'none';
                 trainingSnipeOptions.style.display = selectedMode === 'training' ? 'grid' : 'none';
-                applyFilters();
+                applyFilters(); // Re-filter when mode changes
             }
             sniperModeSelect.addEventListener('change', updateVisibleSettings);
             updateVisibleSettings();
@@ -197,51 +197,73 @@
                 if(el) el.addEventListener('input', e => formatInput(e.target));
             });
             
+            // --- The Corrected applyFilters Function ---
             function applyFilters() {
                 const settings = getSettings();
                 cardContainer.querySelectorAll('.auction-card').forEach(card => {
-                    if (!card.auctionData) { card.style.display = 'none'; return; }
-                    
+                    if (!card.auctionData) { card.style.display = 'none'; return; } // Should not happen, but safety check
+
                     const auction = card.auctionData;
                     const buyNow = auction.buyoutPrice;
 
-                    const passesGeneral = !((settings.minOvr > 0 && auction.rating < settings.minOvr) || (settings.maxOvr < 999 && auction.rating > settings.maxOvr) || (buyNow < settings.minPrice || buyNow > settings.maxPrice) || (settings.platform !== 'both' && auction.platform !== settings.platform) || (settings.program !== 'all' && auction.programDescription !== settings.program));
-                    
+                    // 1. Check General Filters
+                    const passesGeneral = !((settings.minOvr > 0 && auction.rating < settings.minOvr) ||
+                                            (settings.maxOvr < 999 && auction.rating > settings.maxOvr) ||
+                                            (buyNow < settings.minPrice || buyNow > settings.maxPrice) ||
+                                            (settings.platform !== 'both' && auction.platform !== settings.platform) ||
+                                            (settings.program !== 'all' && auction.programDescription !== settings.program));
+
                     if (!passesGeneral) {
                         card.style.display = 'none';
                         return;
                     }
 
-                    let result;
+                    // 2. Check Sniper Mode Filter & Update Data
+                    let shouldShow = false;
                     switch (settings.sniperMode) {
                         case 'coin':
-                            result = evaluateCoinSnipe(auction, settings);
-                            if (result.isSnipe) {
-                                card.querySelector('label[data-type="market-price-label"]').textContent = `${settings.strategyLabel} Price (${settings.saleCount})`;
-                                card.querySelector('span[data-type="market-price"]').textContent = formatNumber(result.marketPrice);
+                            const coinResult = evaluateCoinSnipe(auction, settings);
+                            if (coinResult.isSnipe) {
+                                shouldShow = true;
+                                // Update displayed coin data if elements exist
+                                const marketPriceLabelEl = card.querySelector('label[data-type="market-price-label"]');
+                                const marketPriceEl = card.querySelector('span[data-type="market-price"]');
                                 const profitEl = card.querySelector('span[data-type="profit"]');
-                                profitEl.textContent = formatNumber(result.profit);
-                                profitEl.className = result.profit >= 0 ? 'profit' : 'loss';
-                                card.style.display = 'flex';
-                            } else {
-                                card.style.display = 'none';
+                                if (marketPriceLabelEl) marketPriceLabelEl.textContent = `${settings.strategyLabel} Price (${settings.saleCount})`;
+                                if (marketPriceEl) marketPriceEl.textContent = formatNumber(coinResult.marketPrice);
+                                if (profitEl) {
+                                    profitEl.textContent = formatNumber(coinResult.profit);
+                                    profitEl.className = coinResult.profit >= 0 ? 'profit' : 'loss';
+                                }
+                                card.classList.remove('training-snipe', 'snipe-tier1', 'snipe-tier2', 'snipe-tier3'); // Clear other styles
+                                if(coinResult.snipeClass) card.classList.add(coinResult.snipeClass); // Add correct style
                             }
                             break;
                         case 'training':
-                            result = evaluateTrainingSnipe(auction, settings);
-                            card.style.display = result.isSnipe ? 'flex' : 'none';
+                            const trainingResult = evaluateTrainingSnipe(auction, settings);
+                            shouldShow = trainingResult.isSnipe;
+                            if(shouldShow){
+                                card.classList.remove('snipe-tier1', 'snipe-tier2', 'snipe-tier3'); // Clear coin styles
+                                card.classList.add('training-snipe'); // Add training style
+                            }
                             break;
                         case 'all':
-                            card.style.display = 'flex';
+                            shouldShow = true;
+                            // Ensure no snipe styles applied in 'all' mode
+                            card.classList.remove('training-snipe', 'snipe-tier1', 'snipe-tier2', 'snipe-tier3');
                             break;
                     }
+                    
+                    card.style.display = shouldShow ? 'flex' : 'none';
                 });
             }
+            // Add event listeners AFTER defining applyFilters
             document.querySelectorAll('.config-panel, .top-controls').forEach(panel => {
                 panel.addEventListener('change', applyFilters);
                 panel.addEventListener('input', applyFilters);
             });
             platformSelect.addEventListener('change', updateTicker);
+
 
             function getSettings() {
                 const strategySelect = document.getElementById('strategy-select');
@@ -260,12 +282,15 @@
             }
 
             function processNewAuction(auction) {
-                if (auction.programDescription && !discoveredPrograms.has(auction.programDescription)) {
+                 if (auction.programDescription && !discoveredPrograms.has(auction.programDescription)) {
                     discoveredPrograms.add(auction.programDescription);
                     const option = document.createElement('option');
                     option.value = auction.programDescription;
                     option.textContent = auction.programDescription;
-                    programSelect.appendChild(option);
+                    // Check if programSelect exists before appending
+                    if (programSelect) {
+                        programSelect.appendChild(option);
+                    }
                 }
                 
                 const tickerSettings = { strategyType: 'q2', saleCount: '10', minProfit: 0, minProfitPercent: 0 };
@@ -275,8 +300,8 @@
                 applyFiltersToNewCard(auction);
             }
             
-            function applyFiltersToNewCard(auction) {
-                const settings = getSettings();
+            function applyFiltersToNewCard(auction){
+                 const settings = getSettings();
                 const buyNow = auction.buyoutPrice;
                 if ((settings.minOvr > 0 && auction.rating < settings.minOvr) || (settings.maxOvr < 999 && auction.rating > settings.maxOvr) || (buyNow < settings.minPrice || buyNow > settings.maxPrice) || (settings.platform !== 'both' && auction.platform !== settings.platform) || (settings.program !== 'all' && auction.programDescription !== settings.program)) return;
 
@@ -294,6 +319,7 @@
                         break;
                 }
             }
+
 
             function evaluateCoinSnipe(auction, settings) {
                 const result = { isSnipe: false, marketPrice: 0, profit: 0, snipeClass: '', type: 'coin' };
@@ -335,7 +361,7 @@
                 card.className = 'auction-card';
                 if (result.snipeClass) card.classList.add(result.snipeClass);
                 card.dataset.timestamp = Date.now();
-                card.auctionData = auction;
+                card.auctionData = auction; // Store auction data on the card element
                 card.addEventListener('click', e => { if (e.target.tagName !== 'A' && !e.target.closest('button')) window.open(mutGgUrl, '_blank'); });
                 
                 const marketPriceLabelText = `${getSettings().strategyLabel} Price (${getSettings().saleCount})`;
@@ -355,10 +381,7 @@
 
             function updateTicker() {
                 const now = Date.now();
-                if (now - sessionHourStartTime > 3600000) {
-                    hourlySnipes = [];
-                    sessionHourStartTime = now;
-                }
+                if (now - sessionHourStartTime > 3600000) { hourlySnipes = []; sessionHourStartTime = now; }
                 
                 const totalProfitXbox = hourlySnipes.filter(s => s.platform === 'xbox.series').reduce((sum, s) => sum + s.profit, 0);
                 const totalProfitPs5 = hourlySnipes.filter(s => s.platform === 'playstation.five').reduce((sum, s) => sum + s.profit, 0);
@@ -369,15 +392,10 @@
                 const selectedPlatform = getSettings().platform;
                 if (selectedPlatform === 'both') {
                     bestOverallSnipe = [bestXboxSnipe, bestPs5Snipe].filter(Boolean).sort((a,b) => b.profit - a.profit)[0];
-                    totalProfit = totalProfitXbox + totalProfitPs5;
-                    platformLabel = 'Both';
+                    totalProfit = totalProfitXbox + totalProfitPs5; platformLabel = 'Both';
                 } else if (selectedPlatform === 'xbox.series') {
-                    bestOverallSnipe = bestXboxSnipe; totalProfit = totalProfitXbox;
-                    platformLabel = 'Xbox';
-                } else { 
-                    bestOverallSnipe = bestPs5Snipe; totalProfit = totalProfitPs5;
-                    platformLabel = 'PS5';
-                }
+                    bestOverallSnipe = bestXboxSnipe; totalProfit = totalProfitXbox; platformLabel = 'Xbox';
+                } else { bestOverallSnipe = bestPs5Snipe; totalProfit = totalProfitPs5; platformLabel = 'PS5'; }
                 
                 const snipeEl = document.getElementById('snipe-of-hour'), snipeEl2 = document.getElementById('snipe-of-hour-2');
                 const profitEl = document.getElementById('total-profit-hour'), profitEl2 = document.getElementById('total-profit-hour-2');
